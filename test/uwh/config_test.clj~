@@ -1,0 +1,3 @@
+(ns uwh.config-test
+  (:use uwh.config
+        clojure.test))
