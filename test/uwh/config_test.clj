@@ -1,6 +1,6 @@
 (ns uwh.config-test
   (:require [uwh.config :as cfg])
-  (:use [clojure.test :only [deftest is]]
+  (:use [clojure.test :only [deftest is testing]]
         [clojure.java.io :only [file]]))
 
 (deftest test-simple-config
@@ -43,4 +43,9 @@
 
 (deftest test-system-properties
   (let [props (cfg/retrieve "system:properties")]
-    (is (not= nil (get-in props [:user :name])))))
+    (is (not= nil (get-in props [:user :name]))))
+
+  (testing "system:properties via ::reference element"
+    (let [props (cfg/retrieve (file "test/uwh/data/sys.clj"))]
+      (is (not= nil (get-in props [:user :name]))))))
+
