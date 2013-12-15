@@ -3,7 +3,7 @@
   (:import [java.net URI URL])
   (:use [clojure.java.io :only [as-url]]
         [clojure.walk :only [postwalk]]
-        [clojure.string :only [split]]))
+        [clojure.string :only [blank? lower-case split]]))
 
 (declare retrieve)
 
@@ -73,6 +73,8 @@
     m))
 
 (def system-property-uri (URI. "system:properties"))
+(def system-env-uri (URI. "system:env"))
+
 (def system-property-config 
   (->> (System/getProperties)
        (into {})
@@ -81,13 +83,29 @@
        ;; use safe-assoc-in because some paths like file.encoding and file.encoding.pkg clash ...
        (reduce (fn [res [path v]] (safe-assoc-in res path v)) {})))
 
+(defn- env-name->path [s]
+  (->> (split (lower-case s) #"_")
+       (remove blank?)
+       (map keyword)
+       (vec)))
+
+(def system-env-config
+  (->> (System/getenv)
+       (into {})
+       (remove #(.startsWith (key %) "_"))
+       (map (fn [[k v]]
+              [(env-name->path k) v]))
+       (reduce (fn [res [path v]] (safe-assoc-in res path v)) {})))
+
+
 (defn- read-clj [s]
   (binding [*read-eval* false] (read-string s)))
 
 (defn- retrieve-config [uri]
-  (if (= uri system-property-uri)
-    system-property-config
-    (-> uri as-url slurp read-clj)))
+  (cond
+   (= uri system-property-uri) system-property-config
+   (= uri system-env-uri) system-env-config
+   :else (-> uri as-url slurp read-clj)))
 
 (defn retrieve [input]
   (let [uri (as-uri input)]

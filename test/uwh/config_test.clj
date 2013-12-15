@@ -49,3 +49,6 @@
     (let [props (cfg/retrieve (file "test/uwh/data/sys.clj"))]
       (is (not= nil (get-in props [:user :name]))))))
 
+(deftest test-system-env
+  (let [props (cfg/retrieve "system:env")]
+    (is (not= nil (get-in props [:lein :home])))))
