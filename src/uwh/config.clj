@@ -79,7 +79,7 @@
 
 
 (defprotocol URIConversions
-  (as-uri [self]))
+  (as-uri ^URI [self]))
 
 (extend-protocol URIConversions
   String       (as-uri [s] (URI. s))
@@ -116,7 +116,7 @@
           (resolve-local-references (conj paths path) full-data replacement)))
       data)))
 
-(defn- resolve-references [parent-uri data]
+(defn- resolve-references [^URI parent-uri data]
   (resolve-config-function ::reference #(retrieve (.resolve parent-uri (as-uri %))) data))
 
 (defn- resolve-merges [data]
