@@ -77,6 +77,18 @@
              (walk/keywordize-keys))))))
 
 
+
+(defprotocol URIConversions
+  (as-uri [self]))
+
+(extend-protocol URIConversions
+  String       (as-uri [s] (URI. s))
+  URL          (as-uri [u] (.toURI u))
+  java.io.File (as-uri [f] (.toURI f))
+  URI          (as-uri [u] u))
+
+
+
 (declare retrieve)
 
 (defn merge-recursive [& maps]
@@ -133,15 +145,6 @@
                   (comp s/upper-case name)
                   (comp keyword s/lower-case))))))
 
-
-(defprotocol URIConversions
-  (as-uri [self]))
-
-(extend-protocol URIConversions
-  String       (as-uri [s] (URI. s))
-  URL          (as-uri [u] (.toURI u))
-  java.io.File (as-uri [f] (.toURI f))
-  URI          (as-uri [u] u))
 
 (defn- retrieve-config [uri]
   (cond
