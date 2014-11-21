@@ -1,7 +1,44 @@
 (ns uwh.config-test
-  (:require [uwh.config :as cfg])
+  (:require [uwh.config :as cfg]
+            [clojure.data.json :as json])
   (:use [clojure.test :only [deftest is testing]]
         [clojure.java.io :only [file]]))
+
+;; << Conversions >>
+
+(deftest test-json-conversion
+  (let [sut (cfg/json-bijection)]
+    (is (= (json/json-str {:a [1 "string"]})
+           (cfg/inject sut {:a [1 "string"]})))
+    (is (= {:a [1 "string"]}
+           (cfg/surject sut (json/json-str {:a [1 "string"]}))))
+    (is (= {:a 1}
+           (cfg/surject sut (json/json-str {"a" 1}))))))
+
+(deftest test-properties-conversion
+  (let [sut (cfg/properties-bijection)]
+    (is (= {"a" "1"
+            "b.0" "a" "b.1" "b"
+            "c.key" "value"}
+           (cfg/inject sut {:a 1 :b ["a" "b"] :c {:key "value"}})))
+    (is (= {:a "1" :b ["a" "b"] :c {:key "value"}}
+           (cfg/surject sut
+                        {"a" "1"
+                         "b.0" "a" "b.1" "b"
+                         "c.key" "value"}))))
+  (let [sut (cfg/properties-bijection :separator "_")]
+    (is (= {"a" "1"
+            "b_0" "a" "b_1" "b"
+            "c_key" "value"}
+           (cfg/inject sut {:a 1 :b ["a" "b"] :c {:key "value"}})))
+    (is (= {:a "1" :b ["a" "b"] :c {:key "value"}}
+           (cfg/surject sut
+                        {"a" "1"
+                         "b_0" "a" "b_1" "b"
+                         "c_key" "value"})))))
+
+
+;; << Config acquisition >>
 
 (deftest test-simple-config
   (is (= {:string "value"
